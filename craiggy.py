@@ -61,17 +61,28 @@ def get_listings(s):
         start = s.index(ROW_TAG, end) + len(ROW_TAG)
         end = s.index('</p>', start)
         lines = s[start : end].strip().split('\n')
-
         listing = map(lambda line: strip_tags(line.strip()), lines)
-        listings.append(listing)
-    return listings
+
+        # Add in the url toooo [ of the listing ]
+        TAG = 'href="'
+        st = s.index(TAG, start) + len(TAG)
+        e = s.index('"', st)
+        listings.append([ s[st:e] ] + listing)
+    return map(lambda listing: get_listing_str(listing), listings)
+
+# ['http://sfbay.craigslist.org/sfc/apa/3117256667.html', 'Jul 11', '-', '$3900 / 3br - Fully Remodeled 3 Bed 2 Bath Convenient Location', '-', '(SOMA / south beach)', 'pic', '']
+def get_listing_str(list):
+    better = [list[0], list[1], list[3]] + list[5:]
+    better = map(lambda x: x.replace('\t', ' '), better)
+    return '\t'.join(better)
 
 # Talks to craigslist, returns a list of string results
 def talk_to_craig(br, url, nbhd):
     print '%s\t%s' % (nbhd, url)
     s = get_html(br, url)
     listings = get_listings(s)
-    import pdb; pdb.set_trace()
+    print '\n'.join(listings)
+    print ''
     return listings
 
 def go():
