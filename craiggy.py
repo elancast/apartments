@@ -9,7 +9,7 @@ CRAIG_URL = 'http://sfbay.craigslist.org/search/apa/sfc?query=&srchType=A&minAsk
 NBHDS_REF_FILE = 'neighborhoods.html'
 
 # Will be writing and reading datetimes from file
-TIME_FORMAT = '%m-%d-%y %H:%M'
+TIME_FORMAT = '%d-%m-%y-%H:%M'
 NOW = datetime.datetime.strftime(datetime.datetime.now(), TIME_FORMAT)
 
 # Neighborhoods...
@@ -18,8 +18,11 @@ NBHDS_WANT = [ 'marina', 'russian hill', 'nob hill', 'mission',
                'potrero hill' ]
 
 # Inactive + active listings files
+DIR = 'out'
+DIR_BACKUP = 'backup'
 FILE_INACTIVE = 'out/inactive'
 FILE_ACTIVE = 'out/active'
+FILE_BACKUP = 'listings'
 
 # Useful
 N_I = 0
@@ -204,6 +207,20 @@ def combine_active_listings(curr_l, old_l, in_l):
     # Sort all by time and return
     return map(sort_listings, [new_current.values(), new_inactive])
 
+def quietly_create(path):
+    try: os.mkdir(path)
+    except: pass
+
+# Losing things sucks. Since this is all cumulative, let's remember what
+# happened every time in case something awful happens.
+def backup(active, inactive):
+    path = os.path.join(DIR, DIR_BACKUP)
+    quietly_create(path)
+    path = os.path.join(path, NOW)
+    quietly_create(path)
+    path = os.path.join(path, FILE_BACKUP)
+    dump_listings(path, 'w', active + inactive)
+
 def go():
     # Get the current listings...
     current = get_current_listings()
@@ -217,6 +234,7 @@ def go():
     (acive, old) = combine_active_listings(current, old, inactive)
     dump_listings(FILE_ACTIVE, 'w', acive)
     dump_listings(FILE_INACTIVE, 'w', old)
+    backup(acive, old)
 
     # Print for fun
     print "Wrote %d active and %d inactive listings" % (
