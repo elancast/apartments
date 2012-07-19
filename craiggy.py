@@ -90,11 +90,27 @@ def get_listings(s):
         st = s.index(TAG, start) + len(TAG)
         e = s.index('"', st)
         listings.append([ s[st:e] ] + listing)
-    return map(fix_listing, listings)
+    return filter(lambda x: x != None, map(fix_listing, listings))
 
-# Adds the time and strips out useless fields from the listing
+# Adds the time and strips out useless fields from the listing. Also
+# parses number of bedrooms and returns None if more than 3. Parses
+# price and puts in own field.
 def fix_listing(list):
-    return [list[0], NOW, list[1], list[3]] + list[5:]
+    # Find the number of bedrooms...
+    s = list[3]
+    try:
+        start = s.index(' / ') + 3
+        bds = int(s[start : s.index('br')])
+    except: bds = 3
+    if bds > 3: return None
+
+    # Find the price...
+    try:
+        start = s.index('$') + 1
+        price = int(s[start : s.index(' ')])
+    except: price = 0
+
+    return [list[0], NOW, list[1], str(price), list[5], list[3]] + list[6:]
 
 # Returns an array of listing parts for the listing string
 def get_listing_for_str(s):
