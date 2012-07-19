@@ -1,9 +1,6 @@
 import os, shutil, sys
 import mechanize
-import datetime
-
-# Current time
-NOW = str(datetime.datetime.now())
+import datetime, time
 
 # 3 bedrooms, still set the neighborhood
 CRAIG_URL = 'http://sfbay.craigslist.org/search/apa/sfc?query=&srchType=A&minAsk=&maxAsk=&bedrooms=3&nh=%s'
@@ -11,17 +8,22 @@ CRAIG_URL = 'http://sfbay.craigslist.org/search/apa/sfc?query=&srchType=A&minAsk
 # File with neighborhoods to URL
 NBHDS_REF_FILE = 'neighborhoods.html'
 
+# Will be writing and reading datetimes from file
+TIME_FORMAT = '%m-%d-%y %H:%M'
+NOW = datetime.datetime.strftime(datetime.datetime.now(), TIME_FORMAT)
+
 # Neighborhoods...
 NBHDS_WANT = [ 'marina', 'russian hill', 'nob hill', 'mission',
                'noe valley', 'soma', 'pacific heights',
                'potrero hill' ]
 
-# Inactive listings file
+# Inactive + active listings files
 FILE_INACTIVE = 'out/inactive'
-
-# Active listings file
-FILE_ACTIVE_TEMP = 'out/active.temp'
 FILE_ACTIVE = 'out/active'
+
+# Useful
+N_I = 0
+MARKER = 'I'
 
 # Returns the craigslist urls of the different neighborhoods we want
 # The ret is an array of tuples (url, neighboorhood str)
@@ -48,9 +50,13 @@ def get_neighborhoods_urls():
 
 # THis is to do the opening. May want to add delays or error handling.
 def get_html(br, url):
-    resp = br.open(url)
-    s = resp.read()
-    resp.close()
+    try:
+        resp = br.open(url)
+        s = resp.read()
+        resp.close()
+    except:
+        time.sleep(10)
+        s = get_html(br, url)
     return s
 
 # Takes a line and strips out all HTML tags
@@ -85,7 +91,7 @@ def get_listings(s):
 
 # Adds the time and strips out useless fields from the listing
 def fix_listing(list):
-    return [NOW, list[0], list[1], list[3]] + list[5:]
+    return [list[0], NOW, list[1], list[3]] + list[5:]
 
 # Returns an array of listing parts for the listing string
 def get_listing_for_str(s):
@@ -114,7 +120,7 @@ def handle_file(file):
     return listings
 
 # Talks to craigslist to get the current flights
-def get_current_listings(test=False):
+def get_current_listings(test=True):
     # Testing -- just read from file
     if test:
         DIR = 'pgs'
@@ -141,58 +147,80 @@ def dump_listings(fileName, mode, listings):
     f.close()
 
 def read_listings(fileName):
-    f = open(fileName, 'r')
-    lines = f.read().split('\n')
-    lines = lines[:len(lines) - 1]
-    f.close()
-    return map(get_listing_for_str, lines)
+    try:
+        f = open(fileName, 'r')
+        lines = f.read().split('\n')
+        lines = lines[:len(lines) - 1]
+        f.close()
+        return map(get_listing_for_str, lines)
+    except:
+        return []
 
 # Adds the current time to the listing so know when it entered inactive
 def fix_inactive(inactive):
     out = []
-    for i in inactive: out.append([i[0], NOW] + i[1:])
+    for i in inactive:
+        if i[2] == MARKER: out.append(i)
+        else: out.append([i[0], NOW, MARKER] + i[1:])
     return out
 
-def combine_active_listings(curr, old):
-    # Create mapping from URL to listing...
-    N_I = 1; N_T = 0
-    old_set = set()
-    curr_dic = {}; old_dic = {}
-    for listing in old:
-        old_set.add(listing[N_I])
-        old_dic[listing[N_I]] = listing
+# So craigslist is silly and some listings will disappear and then come
+# back. Surprise!
+def fix_inact_to_act(listing):
+    if listing[2] != MARKER: return listing
+    return [listing[0]] + listing[3:]
 
-    # Run through all the new listings and remove them from the old...
-    active = []
-    for listing in curr:
-        name = listing[N_I]
-        if name in old_dic:
-            listing[N_T] = old_dic[name][N_T]
-            if name in old_set: old_set.remove(name)
-        active.append(listing)
+# Expects the time string field to be 2nd, sorts by time
+def sort_listings(listings):
+    def get_time(listing):
+        return datetime.datetime.strptime(listing[1], TIME_FORMAT)
+    return sorted(listings, key=get_time)
 
-    # Sort by time (for reading convenience)...
-    # TODO
+# Returns a dictionary of listings
+def get_listing_map(listings):
+    d = {}
+    for l in listings: d[l[N_I]] = l
+    return d
 
-    # Return btoh
-    old = map(lambda x: old_dic[x], old_set)
-    return (active, old)
+# Take the new, old, and inactive listings. Things:
+# If listing is in new and old, keep in new
+# If listing is in old or inactive and not new, put in inactive
+# If listing in inactive, not old, but new, WEIRD. put in new. take out.
+# Listings are identified by their URLs. Assuming unique.
+def combine_active_listings(curr_l, old_l, in_l):
+    # Run through the old and inactive and check if they're in new
+    (new_inactive, new_current) = ([], {})
+    curr = get_listing_map(curr_l)
+    for listing in old_l + in_l:
+        key = listing[N_I]
+        if key in curr: new_current[key] = fix_inact_to_act(listing)
+        else: new_inactive.append(listing)
+
+    # Add any new actives and reformat the inactives
+    for key in curr:
+        if not key in new_current: new_current[key] = curr[key]
+    new_inactive = fix_inactive(new_inactive)
+
+    # Sort all by time and return
+    return map(sort_listings, [new_current.values(), new_inactive])
 
 def go():
     # Get the current listings...
     current = get_current_listings()
     print '\n'.join(map(str, current))
 
-    # Dump the active listings to temp file
-    dump_listings(FILE_ACTIVE_TEMP, 'w', current)
-
     # Get the old active listings
     old = read_listings(FILE_ACTIVE)
+    inactive = read_listings(FILE_INACTIVE)
 
     # Find any old active that no longer exist, write to inactive
-    (acive, old) = combine_active_listings(current, old)
-    dump_listings(FILE_INACTIVE, "a", fix_inactive(old))
-    shutil.move(FILE_ACTIVE_TEMP, FILE_ACTIVE)
+    (acive, old) = combine_active_listings(current, old, inactive)
+    dump_listings(FILE_ACTIVE, 'w', acive)
+    dump_listings(FILE_INACTIVE, 'w', old)
+
+    # Print for fun
+    print "Wrote %d active and %d inactive listings" % (
+        len(acive), len(old))
 
 if __name__ == '__main__':
     go()
