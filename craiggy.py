@@ -141,7 +141,7 @@ def handle_file(file):
     return listings
 
 # Talks to craigslist to get the current flights
-def get_current_listings(test=True):
+def get_current_listings(test=False):
     # Testing -- just read from file
     if test:
         DIR = 'pgs'
