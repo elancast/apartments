@@ -1,6 +1,7 @@
 import os, shutil, sys
 import mechanize
 import datetime, time
+from datetime import date
 
 # 3 bedrooms, still set the neighborhood
 CRAIG_URL = 'http://sfbay.craigslist.org/search/apa/sfc?query=&srchType=A&minAsk=&maxAsk=&bedrooms=3&nh=%s'
@@ -9,7 +10,8 @@ CRAIG_URL = 'http://sfbay.craigslist.org/search/apa/sfc?query=&srchType=A&minAsk
 NBHDS_REF_FILE = 'neighborhoods.html'
 
 # Will be writing and reading datetimes from file
-TIME_FORMAT = '%d-%m-%y-%H:%M'
+#TIME_FORMAT = '%d-%m-%y-%H:%M'
+TIME_FORMAT = '%m/%d/%y %H:%M'
 NOW = datetime.datetime.strftime(datetime.datetime.now(), TIME_FORMAT)
 
 # Neighborhoods...
@@ -175,19 +177,33 @@ def read_listings(fileName):
     except:
         return []
 
+def get_days_on_market(parts):
+    def subtract(end, begin):
+        end = date(2012, end.month, end.day)
+        begin = date(2012, begin.month, begin.day)
+        return (end - begin).days
+    print parts
+    if parts[2] == MARKER:
+        off = datetime.datetime.strptime(parts[1], TIME_FORMAT)
+        on = datetime.datetime.strptime(parts[4], '%b %d')
+    else:
+        off = datetime.datetime.strptime(NOW, TIME_FORMAT)
+        on = datetime.datetime.strptime(parts[2], '%b %d')
+    return str(subtract(off, on))
+
 # Adds the current time to the listing so know when it entered inactive
 def fix_inactive(inactive):
     out = []
     for i in inactive:
         if i[2] == MARKER: out.append(i)
-        else: out.append([i[0], NOW, MARKER] + i[1:])
+        else: out.append([i[0], NOW, MARKER, get_days_on_market(i)] + i[1:])
     return out
 
 # So craigslist is silly and some listings will disappear and then come
 # back. Surprise!
 def fix_inact_to_act(listing):
     if listing[2] != MARKER: return listing
-    return [listing[0]] + listing[3:]
+    return [listing[0]] + listing[4:]
 
 # Expects the time string field to be 2nd, sorts by time
 def sort_listings(listings):
@@ -232,7 +248,7 @@ def quietly_create(path):
 def backup(active, inactive):
     path = os.path.join(DIR, DIR_BACKUP)
     quietly_create(path)
-    path = os.path.join(path, NOW)
+    path = os.path.join(path, NOW.replace(' ', '_').replace('/', '-'))
     quietly_create(path)
     path = os.path.join(path, FILE_BACKUP)
     dump_listings(path, 'w', active + inactive)
