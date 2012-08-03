@@ -1,2 +1,19 @@
 pgs
 *.pyc
+COPYING.txt
+INSTALL.txt
+PKG-INFO
+README.txt
+docs
+examples/
+mechanize mechanize.egg-info
+out
+mechanize*
+MANIFEST.in
+ez_setup.py
+setup.cfg
+test-tools/
+test.py
+test
+release.py
+setup.py
