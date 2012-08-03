@@ -5,8 +5,9 @@ import datetime
 
 FROM_EMAIL = "CRAIGGY <elancast@cs.princeton.edu>"
 EMILY_EMAIL = '6094238157@tmomail.net'
-CHRIS_EMAIL = '6313552173@txt.att.net'
-RAFII_EMAIL = '3057736239@txt.att.net'
+CHRIS_EMAIL = '6313552173@mmode.com'
+RAFII_EMAIL = '3057736239@sms.att.net'
+WHEE_EMAIL = 'sfap@fiesta.cc'
 
 def getSmtp(file, host="smtp.princeton.edu", port=587):
     a = smtplib.SMTP(host, port)
@@ -36,10 +37,10 @@ def alert(email, test=True):
     cnt = getSmtp('/u/elancast/v/.shhhh')
     msg = MIMEText(email)
 
-    tos = [ EMILY_EMAIL ]
-    if not test: tos += [ CHRIS_EMAIL, RAFII_EMAIL ]
+    tos = [ WHEE_EMAIL, EMILY_EMAIL ]
+    #if not test: tos += [ CHRIS_EMAIL, EMILY_EMAIL ]
     for email in tos:
         sendit(cnt, msg, 'Craigslist Alert', [email], FROM_EMAIL)
 
 if __name__ == '__main__':
-    alert("hello world")
+    alert("hello world", False)
