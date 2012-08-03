@@ -3,6 +3,8 @@ import mechanize
 import datetime, time
 from datetime import date
 
+from emailer import alert
+
 # 3 bedrooms, still set the neighborhood
 CRAIG_URL = 'http://sfbay.craigslist.org/search/apa/sfc?query=&srchType=A&minAsk=&maxAsk=&bedrooms=3&nh=%s'
 
@@ -17,7 +19,7 @@ NOW = datetime.datetime.strftime(datetime.datetime.now(), TIME_FORMAT)
 # Neighborhoods...
 NBHDS_WANT = [ 'marina', 'russian hill', 'nob hill', 'mission',
                'noe valley', 'soma', 'pacific heights',
-               'potrero hill' ]
+               'potrero hill', 'castro' ]
 
 # Inactive + active listings files
 DIR = 'out'
@@ -253,6 +255,21 @@ def backup(active, inactive):
     path = os.path.join(path, FILE_BACKUP)
     dump_listings(path, 'w', active + inactive)
 
+def get_listing_alert(l):
+    thing = [ l[3], l[4], l[5], l[0] ]
+    return '\n'.join(thing)
+
+def alert_of_nice_stuff(active):
+    count = 0
+    for listing in active:
+        import pdb; pdb.set_trace()
+        if listing[1] != NOW: continue
+        price = int(listing[3])
+        if price > 6000: continue
+        alert(get_listing_alert(listing), False)
+        count += 1
+    return count
+
 def go():
     # Get the current listings...
     current = get_current_listings()
@@ -271,6 +288,9 @@ def go():
     # Print for fun
     print "Wrote %d active and %d inactive listings" % (
         len(acive), len(old))
+
+    # Alert
+    print 'Alerted of %d' % alert_of_nice_stuff(acive)
 
 if __name__ == '__main__':
     go()
