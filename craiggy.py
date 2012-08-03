@@ -262,7 +262,6 @@ def get_listing_alert(l):
 def alert_of_nice_stuff(active):
     count = 0
     for listing in active:
-        import pdb; pdb.set_trace()
         if listing[1] != NOW: continue
         price = int(listing[3])
         if price > 6000: continue
