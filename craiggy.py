@@ -19,7 +19,7 @@ NOW = datetime.datetime.strftime(datetime.datetime.now(), TIME_FORMAT)
 # Neighborhoods...
 NBHDS_WANT = [ 'marina', 'russian hill', 'nob hill', 'mission',
                'noe valley', 'soma', 'pacific heights',
-               'potrero hill', 'castro' ]
+               'lower haight', 'cole', 'bernal', 'civic' ]
 
 # Inactive + active listings files
 DIR = 'out'
@@ -44,7 +44,7 @@ def get_neighborhoods_urls():
         if not TAG in line: continue
         happy = False
         for nbhd in NBHDS_WANT:
-            if nbhd in line.lower():
+            if nbhd in line.lower() and not 'excelsior' in line:
                 happy = True; break
         if not happy: continue
 
@@ -262,6 +262,7 @@ def get_listing_alert(l):
 def alert_of_nice_stuff(active):
     count = 0
     for listing in active:
+        if count >= 4: break
         if listing[1] != NOW: continue
         price = int(listing[3])
         if price > 6000: continue
