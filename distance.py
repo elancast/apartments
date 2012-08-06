@@ -138,8 +138,7 @@ def getAddress(url):
 #                         #
 # # # # # # # # # # # # # #
 
-def modifyLine(line):
-    if True: return line
+def modifyLine(line, test=False):
     if line[-1] == '\n': # strip off new line if at end
         line = line[:-1]
 
@@ -148,6 +147,7 @@ def modifyLine(line):
     # append ADDR/DIST fields if not already
     if 'DIST=' != fields[-1][:5]:
         fields += ['ADDR=', 'DIST=']
+    if test: return '\t'.join(fields)
 
     # has no ADDR
     if fields[-2] == 'ADDR=':
