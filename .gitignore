@@ -6,14 +6,21 @@ PKG-INFO
 README.txt
 docs
 examples/
-mechanize mechanize.egg-info
 out
 mechanize*
 MANIFEST.in
 ez_setup.py
 setup.cfg
-test-tools/
 test.py
 test
 release.py
 setup.py
+
+out2
+out3
+out4
+rawr
+rawr.bak
+wheeout
+keep
+test-*
