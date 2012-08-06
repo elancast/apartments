@@ -144,6 +144,10 @@ def modifyLine(line, test=False):
 
     fields = line.split('\t') # split on the tab
 
+    # ignore it if the price is too high
+    price = int(fields[3])
+    if price > 7000: return line
+
     # append ADDR/DIST fields if not already
     if 'DIST=' != fields[-1][:5]:
         fields += ['ADDR=', 'DIST=']

@@ -3,17 +3,17 @@
 # Some names
 ACT=out/active
 DIST=out/active-distances
-DIR=apart/mechanize/
+DIR="apart/mechanize-0.2.5/"
 CRAIGGY=craiggy.py
 DISTANCE=distance.py
 OUTF=OUT-CRAIGGY
-BACK=.bak
+BACK=".bak"
 
 # Local...
-DIR=./
+#DIR=./
 
 # Run Emily
-python $DIR$CRAIGGY >> $OUTF
+python $DIR$CRAIGGY > $OUTF
 
 # Back up
 cp $ACT $ACT$BACK
@@ -22,6 +22,13 @@ cp $DIST $DIST$BACK
 
 # Run Rafi
 python $DIR$DISTANCE $DIST $ACT > $DIST 2>>$OUTF
+
+# Email me
+ZIP=whee.zip
+touch $ZIP
+rm $ZIP
+zip $ZIP out/*
+mail "elancast@princeton.edu" < $ZIP
 
 # Clean up
 rm $ACT$BACK
