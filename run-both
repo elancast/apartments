@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Some names
+ACT=out/active
+DIST=out/active-distances
+DIR=apart/mechanize/
+CRAIGGY=craiggy.py
+DISTANCE=distance.py
+OUTF=OUT-CRAIGGY
+BACK=.bak
+
+# Local...
+DIR=./
+
+# Run Emily
+python $DIR$CRAIGGY >> $OUTF
+
+# Back up
+cp $ACT $ACT$BACK
+touch $DIST
+cp $DIST $DIST$BACK
+
+# Run Rafi
+python $DIR$DISTANCE $DIST $ACT > $DIST 2>>$OUTF
+
+# Clean up
+rm $ACT$BACK
+rm $DIST$BACK
