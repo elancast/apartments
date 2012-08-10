@@ -96,6 +96,24 @@ def get_listings(s):
         listings.append([ s[st:e] ] + listing)
     return filter(lambda x: x != None, map(fix_listing, listings))
 
+def fix_listing_new_craiggy(list):
+    s = list[6]
+    try:
+        start = s.index(' / ') + 3
+        bds = int(s[start : s.index('br')])
+    except: bds = 3
+    if bds > 3: return None
+
+    # Find the price...
+    try:
+        start = s.index('$') + 1
+        price = int(s[start : s.index(' ')])
+    except: price = 0
+
+    s = s[:len(s) - 2]
+    return [list[0], NOW, list[2], str(price),
+            list[8], s, list[4]] + list[10:]
+
 # Adds the time and strips out useless fields from the listing. Also
 # parses number of bedrooms and returns None if more than 3. Parses
 # price and puts in own field.
@@ -112,7 +130,7 @@ def fix_listing(list):
     try:
         start = s.index('$') + 1
         price = int(s[start : s.index(' ')])
-    except: price = 0
+    except: return fix_listing_new_craiggy(list)
 
     return [list[0], NOW, list[1], str(price), list[5], list[3]] + list[6:]
 
