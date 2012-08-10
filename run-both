@@ -21,7 +21,7 @@ touch $DIST
 cp $DIST $DIST$BACK
 
 # Run Rafi
-python $DIR$DISTANCE $DIST $ACT > $DIST 2>>$OUTF
+#python $DIR$DISTANCE $DIST $ACT > $DIST 2>>$OUTF
 
 # Email me
 ZIP=whee.zip
