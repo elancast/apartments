@@ -112,8 +112,12 @@ def fix_listing_new_craiggy(list):
     if price > 6000: return None
 
     s = s[:len(s) - 2]
-    return [list[0], NOW, list[2], str(price),
+    xx = [list[0], NOW, list[2], str(price),
             list[8], s, list[4]] + list[10:]
+    if len(xx) > 8:
+        xx[5] += ' ' + xx[6]
+        xx[6:] = xx[7:]
+    return xx
 
 # Adds the time and strips out useless fields from the listing. Also
 # parses number of bedrooms and returns None if more than 3. Parses
