@@ -109,6 +109,7 @@ def fix_listing_new_craiggy(list):
         start = s.index('$') + 1
         price = int(s[start : s.index(' ')])
     except: price = 0
+    if price > 6000: return None
 
     s = s[:len(s) - 2]
     return [list[0], NOW, list[2], str(price),
@@ -131,6 +132,7 @@ def fix_listing(list):
         start = s.index('$') + 1
         price = int(s[start : s.index(' ')])
     except: return fix_listing_new_craiggy(list)
+    if price > 6000: return None
 
     return [list[0], NOW, list[1], str(price), list[5], list[3]] + list[6:]
 
